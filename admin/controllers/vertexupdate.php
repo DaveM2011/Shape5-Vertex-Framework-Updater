@@ -52,11 +52,27 @@ class VertexUpdateControllerVertexUpdate extends JControllerForm {
         }
     }
     private function pull_update() {
+		ini_set('allow_url_fopen',1);
         $link = 'http://www.shape5.com/vertex/patch/Shape5_Vertex4_Patch.zip';
-        if(copy($link, JPATH_COMPONENT_ADMINISTRATOR . "/update.zip")) {
+        if(@copy($link, JPATH_COMPONENT_ADMINISTRATOR . "/update.zip")) {
             return true;
         } else {
-            return false;
+			$fp = fopen(JPATH_COMPONENT_ADMINISTRATOR . "/update.zip", 'w+');
+			//Here is the file we are downloading, replace spaces with %20
+			$ch = curl_init($link);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 50);
+			// write curl response to file
+			curl_setopt($ch, CURLOPT_FILE, $fp);
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+			// get curl response
+			if(!curl_exec($ch)) {
+				curl_close($ch);
+				fclose($fp);
+				return false;
+			}
+			curl_close($ch);
+			fclose($fp);
+            return true;
         }
     }
 }
